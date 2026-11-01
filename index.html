@@ -225,6 +225,23 @@ body{
   position:relative;width:clamp(74px,8.2vw,98px);aspect-ratio:120/156;flex:none;
   animation:bob 6.5s ease-in-out infinite;
 }
+.tear.link{display:block;text-decoration:none;color:inherit;
+  -webkit-user-drag:none;-webkit-tap-highlight-color:transparent;
+  transition:transform .4s cubic-bezier(.22,.61,.36,1),filter .4s ease}
+.tear.link:hover{transform:translateY(-7px) scale(var(--s,1));
+  filter:drop-shadow(0 12px 20px rgba(123,167,207,.28))}
+.tear.link:active{transform:translateY(-2px) scale(calc(var(--s,1) * .97))}
+.tear.link .t-body{transition:fill .4s ease,stroke .4s ease}
+.tear.link:hover .t-body{stroke:var(--blue)}
+.tear .tw-hint{
+  position:absolute;left:0;right:0;top:81%;transform:translateY(-4px);
+  text-align:center;font-size:clamp(9.5px,1vw,11px);letter-spacing:.24em;text-indent:.24em;
+  color:var(--blue-d);opacity:0;transition:opacity .35s ease,transform .35s ease;
+}
+.tear.link:hover .tw-hint{opacity:.9;transform:translateY(0)}
+@media (hover:none){
+  .tear .tw-hint{opacity:.45;font-size:9px;transform:translateY(0)}
+}
 .tear:nth-child(2){animation-delay:-2.2s}
 .tear:nth-child(3){animation-delay:-4.4s}
 .tear + .tear{margin-left:-18px}
@@ -302,6 +319,9 @@ body{
 .closing{margin-top:clamp(24px,4vh,38px);font-size:clamp(14.5px,2.05vw,21px);
   letter-spacing:.24em;color:var(--ink);text-indent:.24em}
 .closing .mark{color:var(--blue-d)}
+
+.credit{margin-top:clamp(30px,5vh,52px);font-size:clamp(10.5px,1.15vw,12.5px);
+  letter-spacing:.34em;text-indent:.34em;color:var(--ink-3)}
 
 /* ---------- 尾页 ---------- */
 .end .thanks{font-size:clamp(27px,4.3vw,44px);letter-spacing:.28em;text-indent:.28em}
@@ -469,28 +489,32 @@ body{
     <div class="inner">
       <div class="tears-drag" id="tearsDrag">
         <div class="tears anim" style="--d:.14s">
-          <div class="tear">
+          <a class="tear link" draggable="false" href="https://www.kdocs.cn/l/cquWR0S7pon1" target="_blank" rel="noopener">
           <svg viewBox="0 0 120 156" aria-hidden="true">
             <path class="t-body" d="M60 5C60 5 106 76 106 104C106 130 86 150 60 150C34 150 14 130 14 104C14 76 60 5 60 5Z"/>
             <ellipse class="t-shine" cx="41" cy="92" rx="6.5" ry="10.5" transform="rotate(-18 41 92)"/>
           </svg>
           <span class="tw">话术</span>
-        </div>
-          <div class="tear mid">
+          <span class="tw-hint">查 看</span>
+        </a>
+                    <a class="tear link mid" draggable="false" href="https://www.kdocs.cn/l/cfAoy9kAveA1" target="_blank" rel="noopener">
           <svg viewBox="0 0 120 156" aria-hidden="true">
             <path class="t-body" d="M60 5C60 5 106 76 106 104C106 130 86 150 60 150C34 150 14 130 14 104C14 76 60 5 60 5Z"/>
             <ellipse class="t-shine" cx="41" cy="92" rx="6.5" ry="10.5" transform="rotate(-18 41 92)"/>
           </svg>
           <span class="tw">板评</span>
-        </div>
-          <div class="tear">
+          <span class="tw-hint">查 看</span>
+        </a>
+                    <a class="tear link" draggable="false" href="https://www.kdocs.cn/l/ch9V5RcTN6je" target="_blank" rel="noopener">
           <svg viewBox="0 0 120 156" aria-hidden="true">
             <path class="t-body" d="M60 5C60 5 106 76 106 104C106 130 86 150 60 150C34 150 14 130 14 104C14 76 60 5 60 5Z"/>
             <ellipse class="t-shine" cx="41" cy="92" rx="6.5" ry="10.5" transform="rotate(-18 41 92)"/>
           </svg>
           <span class="tw">卡类</span>
+          <span class="tw-hint">查 看</span>
+        </a>
         </div>
-        </div>
+      </div>
       </div>
       <p class="eyebrow anim" style="--d:.05s">价 目 · 时 段</p>
       <div class="price anim" style="--d:.18s">
@@ -562,6 +586,7 @@ body{
       <div class="btns anim" style="--d:.7s">
         <button class="btn" id="restart">再 看 一 次</button>
       </div>
+      <p class="credit anim" style="--d:.82s">— 由 陳 引 制 作 —</p>
     </div>
   </section>
 
@@ -646,19 +671,26 @@ body{
   if (dragEl){
     dragEl.addEventListener('pointerdown', function(e){
       if (e.button) return;
-      ds.on = true; ds.x0 = e.clientX; ds.dx = 0; ds.moved = false;
+      ds.on = true; ds.x0 = e.clientX; ds.dx = 0; ds.moved = false; ds.cap = false;
+      ds.pid = e.pointerId;
       dragEl.style.transition = 'none';
-      try { dragEl.setPointerCapture(e.pointerId); } catch(err){}
     });
     window.addEventListener('pointermove', function(e){
       if (!ds.on) return;
       ds.dx = (e.clientX - ds.x0) * 0.9;
-      if (Math.abs(ds.dx) > 6) ds.moved = true;
+      if (Math.abs(ds.dx) > 6){
+        ds.moved = true;
+        // 只有真正开始拖动后才捕获指针，避免影响链接点击
+        if (!ds.cap){
+          try { dragEl.setPointerCapture(ds.pid); ds.cap = true; } catch(err){}
+        }
+      }
       dragEl.style.transform = 'translateX(' + ds.dx.toFixed(1) + 'px)';
     });
     window.addEventListener('pointerup', function(){
       if (!ds.on) return;
       ds.on = false;
+      tapLocked = ds.moved;
       dragEl.style.transition = 'transform .55s cubic-bezier(.22,.61,.36,1)';
       dragEl.style.transform = 'translateX(0px)';
       if (ds.dx < -72) next();
@@ -666,11 +698,19 @@ body{
     });
     window.addEventListener('pointercancel', function(){
       if (!ds.on) return;
-      ds.on = false; ds.moved = true;
+      ds.on = false; ds.moved = true; tapLocked = true;
       dragEl.style.transition = 'transform .55s cubic-bezier(.22,.61,.36,1)';
       dragEl.style.transform = 'translateX(0px)';
     });
   }
+
+  if (dragEl) dragEl.addEventListener('dragstart', function(e){ e.preventDefault(); });
+
+  // 拖动结束后紧接着的那次 click 不再触发链接跳转
+  var tapLocked = false;
+  window.addEventListener('click', function(e){
+    if (tapLocked){ tapLocked = false; e.preventDefault(); e.stopPropagation(); }
+  }, true);
 
   document.addEventListener('click', function(e){
     if (e.target.closest('button, a, .rail')) return;
